@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+  <ModulePrefs title="When is Good">
+    <Require feature="wave-preview" /> 
+  </ModulePrefs>
+  <Content type="html">
+    <![CDATA[     
+     <script type="text/javascript"
+      src="http://wave-api.appspot.com/public/wave.js"></script>
+<script type="text/javascript">
+   var initdate=false; 
+        function $(name) {
+          return document.getElementById(name);
+        }
+        
+        function observe(elem, name, handler) {
+          elem.addEventListener(name, handler, false);
+        }
+
+    function buttonClicked(id) {
+      var viewerId = wave.getViewer().getId();
+      var state = wave.getState();
+      var vstate = wave.getState().get(viewerId+":"+id);
+      var value=0;
+      if(vstate && vstate=="true"){
+          vstate=null
+          value=-1;
+      }else if(!vstate){
+          vstate="true"
+          value=1;
+      }
+      
+      var count = parseInt(wave.getState().get(id.toString(), '0'));
+      //console.log("submitDelta: "+(count +value)+": "+vstate);
+      var delta={};
+      delta[id]=count+value >=0 ? count+value : 0;
+      delta[viewerId+":"+id]=vstate;
+      wave.getState().submitDelta(delta);
+      
+    }
+
+    function updateDay(id,val,viewer){
+      var di=$(id+'i');
+      var dbc=$(id+'c');
+      if(!val || 0==val) {
+        dbc.innerHTML = "";
+      }
+      else {
+        dbc.innerHTML = "("+val+")";
+      } 
+      if( viewer && viewer=="true"){
+         di.className="selected";
+      }else{
+         di.className="";
+      }
+      
+    }
+    var daysInWeek=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    function updateDates(){
+        var stimeStr = wave.getState().get("startDate");
+        if(!stimeStr){
+        wave.getState().submitDelta({ startDate:new Date().getTime()});
+        return false;
+        }
+        var stime=parseInt(stimeStr);
+        var nowdate=new Date();
+        for(var i=0;i<7;i++){
+            var curtime=stime + (i * ( /*ms in day*/ 1000*60*60*24));
+            var curdate=new Date(parseInt(curtime));
+            var id="d"+(i+1);
+            if(curdate.getDate()==nowdate.getDate() && curdate.getYear()==nowdate.getYear() && curdate.getMonth()==nowdate.getMonth()){
+                $(id+"name").innerHTML=daysInWeek[curdate.getDay()] + " (today)";
+            }else{
+                $(id+"name").innerHTML=daysInWeek[curdate.getDay()];
+            }
+        }
+    }
+   
+    function stateUpdated() {
+      var viewerId = wave.getViewer().getId();
+      //console.log("stateUpdated: "+viewerId);
+      if(!initdate){
+          if(updateDates()){
+              initdate=true;
+          }
+      }
+      for(var i=1;i<8;i++){
+        updateDay("d"+i,wave.getState().get("d"+i), wave.getState().get(viewerId+":d"+i));
+      }
+    }
+ 
+    function init() {
+      if (wave && wave.isInWaveContainer()) {
+      //console.log("init: setStateCallback");
+        wave.setStateCallback(stateUpdated);
+      }
+    }
+    gadgets.util.registerOnLoadHandler(init);
+
+
+</script>
+<b>When is good for you?</b>
+
+<ul>
+    <li id="d1i" onClick="buttonClicked('d1');"><span id="d1name">Day 1</span> <span id="d1c"></span> </li>
+    <li id="d2i" onClick="buttonClicked('d2');"><span id="d2name">Day 2</span> <span id="d2c"></span> </li>
+    <li id="d3i" onClick="buttonClicked('d3');"><span id="d3name">Day 3</span> <span id="d3c"></span> </li>
+    <li id="d4i" onClick="buttonClicked('d4');"><span id="d4name">Day 4</span> <span id="d4c"></span> </li>
+    <li id="d5i" onClick="buttonClicked('d5');"><span id="d5name">Day 5</span> <span id="d5c"></span> </li>
+    <li id="d6i" onClick="buttonClicked('d6');"><span id="d6name">Day 6</span> <span id="d6c"></span> </li>
+    <li id="d7i" onClick="buttonClicked('d7');"><span id="d7name">Day 7</span> <span id="d7c"></span> </li>
+</ul>
+    <style type="text/css">
+        li{
+            color:blue;
+            text-decoration:underline;
+            cursor:pointer;
+        }
+      li.selected{
+        background: #ddf;
+       }
+       li.today{
+            
+       }
+   </style>
+
+    ]]>
+  </Content>
+</Module>
